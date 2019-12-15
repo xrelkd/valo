@@ -1,17 +1,17 @@
 [package]
 name = "valo"
 description = "A Program to Control Backlights (and other Hardware Lights) in GNU/Linux"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["user <user@localhost>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-trait = "0.1.21"
+async-trait = "0.1"
 failure = "0.1"
 futures = "0.3"
 futures-util = "0.3"
-lazy_static = "1.4"
+lazy_static = "1"
 structopt = "0.3"
 tokio = { version = "0.2", features = [ "fs", "time", "signal" ] }

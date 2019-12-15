@@ -457,7 +457,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "valo"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "async-trait 0.1.21 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.6 (registry+https://github.com/rust-lang/crates.io-index)",
