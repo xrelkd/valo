@@ -1,15 +1,15 @@
+use structopt::{clap::Shell as ClapShell, StructOpt};
+
 use crate::backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight};
 
 #[derive(Debug, StructOpt)]
 pub enum Command {
-    #[structopt(
-        name = "screen",
-        about = "A simple command that changes screen backlight level."
-    )]
+    #[structopt(name = "screen", about = "A simple command that changes screen backlight level.")]
     ScreenBacklight {
         #[structopt(subcommand, name = "screen")]
         cmd: BacklightCommand,
     },
+
     #[structopt(
         name = "keyboard",
         about = "A simple command that changes MacBooks' keyboard backlight level."
@@ -18,41 +18,77 @@ pub enum Command {
         #[structopt(subcommand, name = "keyboard")]
         cmd: BacklightCommand,
     },
+
+    #[structopt(name = "completions", about = "Generate tab-completion scripts for your shell")]
+    Completions {
+        #[structopt(subcommand, name = "shell")]
+        shell: CompletionShell,
+    },
 }
 
 #[derive(Debug, StructOpt)]
 pub enum BacklightCommand {
-    #[structopt(about = "Get current keyboard backlight brightness value")]
+    /// Get current keyboard backlight brightness value
     Get,
 
-    #[structopt(about = "Get current keyboard backlight brightness percentage value")]
+    /// Get current keyboard backlight brightness percentage value
     GetPercentage,
 
-    #[structopt(about = "Set backlight brightness as value")]
+    /// Set backlight brightness as value
     Set { value: u64 },
 
-    #[structopt(about = "Set backlight brightness as percentage value")]
+    /// Set backlight brightness as percentage value
     SetPercentage { percentage_value: u64 },
 
-    #[structopt(about = "Increase backlight brightness by percentage value")]
-    Up { percentage_value: u64 },
+    /// Increase backlight brightness by percentage value
+    Up {
+        #[structopt(default_value = "5")]
+        percentage_value: u64,
+    },
 
-    #[structopt(about = "Decrease backlight brightness by percentage value")]
-    Down { percentage_value: u64 },
+    /// Decrease backlight brightness by percentage value
+    Down {
+        #[structopt(default_value = "5")]
+        percentage_value: u64,
+    },
 
-    #[structopt(about = "Set backlight brightness as max")]
+    /// Set backlight brightness as max
     Max,
 
-    #[structopt(about = "Turn off backlight")]
+    /// Turn off backlight
     Off,
 
+    /// Perform breathing light mode
     BreathingLight {
-        #[structopt(long)]
+        #[structopt(long, about = "percentage per step")]
         step: u64,
 
-        #[structopt(long)]
+        #[structopt(long, about = "delay millisecond")]
         delay: u64,
     },
+}
+
+#[derive(Debug, StructOpt, Clone)]
+pub enum CompletionShell {
+    #[structopt(name = "bash")]
+    /// Generate shell completion for Bash
+    Bash,
+
+    #[structopt(name = "zsh")]
+    /// Generate shell completion for Zsh
+    Zsh,
+
+    #[structopt(name = "fish")]
+    /// Generate shell completion for Fish
+    Fish,
+
+    #[structopt(name = "powershell")]
+    /// Generate shell completion for PowerShell
+    PowerShell,
+
+    #[structopt(name = "elvish")]
+    /// Generate shell completion for Elvish
+    Elvish,
 }
 
 impl Command {
@@ -63,10 +99,18 @@ impl Command {
             match self {
                 Command::ScreenBacklight { cmd } => cmd.screen().await,
                 Command::KeyboardBacklight { cmd } => cmd.keyboard().await,
+                Command::Completions { shell } => Self::generate_completion(shell).await,
             }
         });
 
         std::process::exit(exit_code);
+    }
+
+    async fn generate_completion(shell: CompletionShell) -> i32 {
+        let mut app = Self::clap();
+        let binary_name = app.get_name().to_owned();
+        app.gen_completions_to(&binary_name, shell.into(), &mut std::io::stdout());
+        0
     }
 }
 
@@ -126,7 +170,7 @@ impl BacklightCommand {
 
                 loop {
                     futures::select! {
-                        _ = backlight.run_breathing(step, delay).fuse() => {
+                        _ = backlight.run_breathing(step, delay, 0, 100).fuse() => {
                             break;
                         },
                         _ = signal_receiver.fuse() => {
@@ -140,5 +184,17 @@ impl BacklightCommand {
         };
 
         exit_code.map(|_value| 0).unwrap_or(1)
+    }
+}
+
+impl Into<ClapShell> for CompletionShell {
+    fn into(self) -> ClapShell {
+        match self {
+            CompletionShell::Bash => ClapShell::Bash,
+            CompletionShell::Elvish => ClapShell::Elvish,
+            CompletionShell::Fish => ClapShell::Fish,
+            CompletionShell::PowerShell => ClapShell::PowerShell,
+            CompletionShell::Zsh => ClapShell::Zsh,
+        }
     }
 }

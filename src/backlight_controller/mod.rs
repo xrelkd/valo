@@ -15,22 +15,15 @@ pub struct Device {
 
 impl Default for Device {
     fn default() -> Device {
-        Device {
-            current_value: AtomicU64::new(0),
-            max_value: AtomicU64::new(255),
-        }
+        Device { current_value: AtomicU64::new(0), max_value: AtomicU64::new(255) }
     }
 }
 
 impl Device {
     pub async fn load(value_file_path: &Path, max_value_file_path: &Path) -> Result<Device, Error> {
         use tokio::fs;
-        let current_value = AtomicU64::new(
-            fs::read_to_string(value_file_path)
-                .await?
-                .trim()
-                .parse::<u64>()?,
-        );
+        let current_value =
+            AtomicU64::new(fs::read_to_string(value_file_path).await?.trim().parse::<u64>()?);
 
         let max_value = AtomicU64::new(
             fs::read_to_string(max_value_file_path)
@@ -40,10 +33,7 @@ impl Device {
                 .parse::<u64>()?,
         );
 
-        Ok(Device {
-            current_value,
-            max_value,
-        })
+        Ok(Device { current_value, max_value })
     }
 
     pub fn max_value(&self) -> u64 {
@@ -137,13 +127,11 @@ pub trait Backlight: Send + Sync {
     }
 
     async fn up(&mut self, percentage_value: u64) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Up { percentage_value })
-            .await
+        self.change_value(BacklightAction::Up { percentage_value }).await
     }
 
     async fn down(&mut self, percentage_value: u64) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Down { percentage_value })
-            .await
+        self.change_value(BacklightAction::Down { percentage_value }).await
     }
 
     async fn max(&mut self) -> Result<u64, Error> {
@@ -163,20 +151,32 @@ pub trait Backlight: Send + Sync {
         self.change_value(BacklightAction::Set { value }).await
     }
 
-    async fn run_breathing(&mut self, step: u64, delay: u64) {
+    async fn run_breathing(
+        &mut self,
+        step: u64,
+        delay: u64,
+        min_percentage: u64,
+        max_percentage: u64,
+    ) {
         use std::time::Duration;
         use tokio::time;
 
         let step = if step == 0 || step > 100 { 5 } else { step };
         let delay = if delay == 0 { 100 } else { delay };
         let iteration = 100 / step;
+
+        let (min_percentage, max_percentage) = {
+            let fix = |value| if value > 100 { 100 } else { value };
+            (fix(min_percentage), fix(max_percentage))
+        };
+
         loop {
             for _ in 1..iteration {
                 let _ = self.up(step).await;
                 time::delay_for(Duration::from_millis(delay)).await;
             }
 
-            let _ = self.max().await;
+            let _ = self.set_percentage(max_percentage).await;
             time::delay_for(Duration::from_millis(delay)).await;
 
             for _ in 1..iteration {
@@ -184,7 +184,7 @@ pub trait Backlight: Send + Sync {
                 time::delay_for(Duration::from_millis(delay)).await;
             }
 
-            let _ = self.off().await;
+            let _ = self.set_percentage(min_percentage).await;
             time::delay_for(Duration::from_millis(delay)).await;
         }
     }

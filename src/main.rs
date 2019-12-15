@@ -7,9 +7,6 @@ extern crate failure;
 #[macro_use]
 extern crate lazy_static;
 
-#[macro_use]
-extern crate structopt;
-
 mod backlight_controller;
 mod cmd;
 

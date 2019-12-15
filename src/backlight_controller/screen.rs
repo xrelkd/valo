@@ -79,11 +79,8 @@ impl Backlight for ScreenBacklight {
     }
 
     async fn reload(&mut self) -> Result<(), Error> {
-        let device = Device::load(
-            self.current_value_file_path(),
-            self.maximum_value_file_path(),
-        )
-        .await?;
+        let device =
+            Device::load(self.current_value_file_path(), self.maximum_value_file_path()).await?;
 
         self.device = device;
         Ok(())
