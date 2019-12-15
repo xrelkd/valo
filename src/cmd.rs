@@ -2,6 +2,9 @@ use structopt::{clap::Shell as ClapShell, StructOpt};
 
 use crate::backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight};
 
+const EXIT_SUCCESS: i32 = 0;
+const EXIT_FAILURE: i32 = 1;
+
 #[derive(Debug, StructOpt)]
 pub enum Command {
     #[structopt(name = "screen", about = "A simple command that changes screen backlight level.")]
@@ -110,7 +113,7 @@ impl Command {
         let mut app = Self::clap();
         let binary_name = app.get_name().to_owned();
         app.gen_completions_to(&binary_name, shell.into(), &mut std::io::stdout());
-        0
+        EXIT_SUCCESS
     }
 }
 
@@ -120,7 +123,7 @@ impl BacklightCommand {
             Ok(backlight) => self.run(backlight).await,
             Err(err) => {
                 eprintln!("{}", err);
-                1
+                EXIT_FAILURE
             }
         }
     }
@@ -130,21 +133,23 @@ impl BacklightCommand {
             Ok(backlight) => self.run(backlight).await,
             Err(err) => {
                 eprintln!("{}", err);
-                1
+                EXIT_FAILURE
             }
         }
     }
 
     async fn run<B: Backlight>(self, mut backlight: B) -> i32 {
         use BacklightCommand::*;
-        let exit_code = match self {
+        let current_brightness_value = match self {
             Get => {
-                println!("{}", backlight.current_value());
-                Ok(0)
+                let v = backlight.current_value();
+                println!("{}", v);
+                Ok(v as u64)
             }
             GetPercentage => {
-                println!("{}", backlight.current_percentage());
-                Ok(0)
+                let v = backlight.current_percentage();
+                println!("{}", v);
+                Ok(v as u64)
             }
             Set { value } => backlight.set(value).await,
             SetPercentage { percentage_value } => backlight.set_percentage(percentage_value).await,
@@ -183,7 +188,7 @@ impl BacklightCommand {
             }
         };
 
-        exit_code.map(|_value| 0).unwrap_or(1)
+        current_brightness_value.map(|_value| EXIT_SUCCESS).unwrap_or(EXIT_FAILURE)
     }
 }
 
