@@ -84,7 +84,7 @@ pub trait Backlight: Send + Sync {
     fn current_value(&self) -> u64;
 
     fn current_percentage(&self) -> u64 {
-        (100 * self.current_value() / self.max_value())
+        100 * self.current_value() / self.max_value()
     }
 
     fn current_value_file_path(&self) -> &Path;
@@ -120,8 +120,7 @@ pub trait Backlight: Send + Sync {
             Off => 0,
         };
 
-        // let _ = tokio::fs::write(self.current_value_file_path(), format!("{}", next)).await?;
-        let _ = std::fs::write(self.current_value_file_path(), format!("{}", next));
+        let _ = tokio::fs::write(self.current_value_file_path(), format!("{}", next)).await?;
         self.reload().await?;
         Ok(self.current_value())
     }
