@@ -27,6 +27,9 @@ pub enum Command {
         #[structopt(subcommand, name = "shell")]
         shell: CompletionShell,
     },
+
+    #[structopt(name = "version", about = "Show version")]
+    Version,
 }
 
 #[derive(Debug, StructOpt)]
@@ -103,6 +106,10 @@ impl Command {
                 Command::ScreenBacklight { cmd } => cmd.screen().await,
                 Command::KeyboardBacklight { cmd } => cmd.keyboard().await,
                 Command::Completions { shell } => Self::generate_completion(shell).await,
+                Command::Version => Self::clap()
+                    .write_version(&mut std::io::stdout())
+                    .map(|_ret| EXIT_SUCCESS)
+                    .unwrap_or(EXIT_FAILURE),
             }
         });
 
