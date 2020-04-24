@@ -1,7 +1,7 @@
 [package]
 name = "valo"
 description = "A Program to Control Backlights (and other Hardware Lights) in GNU/Linux"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["user <user@localhost>"]
 edition = "2018"
 
