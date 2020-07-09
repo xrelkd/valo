@@ -1,7 +1,9 @@
-with import <nixpkgs> {};
+with import <nixpkgs> { };
+
 stdenv.mkDerivation {
-  name = "dev";
-  buildInputs = [ rustup ];
+  name = "valo-dev";
+
+  RUST_BACKTRACE = 1;
+
+  nativeBuildInputs = [ rustup ];
 }
-
-
