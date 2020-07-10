@@ -8,8 +8,11 @@ extern crate failure;
 extern crate lazy_static;
 
 mod backlight_controller;
-mod cmd;
+mod command;
 
-use structopt::StructOpt;
+use self::command::Command;
 
-fn main() { cmd::Command::from_args().run(); }
+fn main() {
+    let cmd = Command::new();
+    cmd.run();
+}
