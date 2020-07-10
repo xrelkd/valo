@@ -15,15 +15,23 @@ pub struct ScreenBacklight {
 }
 
 impl ScreenBacklight {
-    pub async fn new() -> Result<Self, Error> { Self::select_best_device().await }
+    pub async fn new() -> Result<Self, Error> {
+        Self::select_best_device().await
+    }
 
     async fn select_best_device() -> Result<ScreenBacklight, Error> {
         use tokio::fs;
-        let mut backlight_dir = fs::read_dir(BL_PATH.as_path()).await?;
+        let mut backlight_dir = fs::read_dir(BL_PATH.as_path())
+            .await
+            .map_err(|source| Error::ReadDir { dir_path: BL_PATH.to_path_buf(), source })?;
         let mut best_value: u64 = 0;
         let mut best_controller = None;
 
-        while let Some(current_dir) = backlight_dir.next_entry().await? {
+        while let Some(current_dir) = backlight_dir
+            .next_entry()
+            .await
+            .map_err(|source| Error::ReadDir { dir_path: BL_PATH.to_path_buf(), source })?
+        {
             let current_value =
                 tokio::fs::read_to_string(current_dir.path().join("max_brightness").as_path())
                     .await
@@ -53,20 +61,28 @@ impl ScreenBacklight {
                     best_controller: best_controller.to_str().unwrap().to_owned(),
                 })
             }
-            None => Err(Error::NoSuchDevice("screen light".to_owned())),
+            None => Err(Error::NoSuchDevice { device: "screen light".to_owned() }),
         }
     }
 }
 
 #[async_trait]
 impl Backlight for ScreenBacklight {
-    fn max_value(&self) -> u64 { self.device.max_value() }
+    fn max_value(&self) -> u64 {
+        self.device.max_value()
+    }
 
-    fn current_value(&self) -> u64 { self.device.current_value() }
+    fn current_value(&self) -> u64 {
+        self.device.current_value()
+    }
 
-    fn current_value_file_path(&self) -> &Path { self.value_file_path.as_path() }
+    fn current_value_file_path(&self) -> &Path {
+        self.value_file_path.as_path()
+    }
 
-    fn maximum_value_file_path(&self) -> &Path { self.maximum_value_file_path.as_path() }
+    fn maximum_value_file_path(&self) -> &Path {
+        self.maximum_value_file_path.as_path()
+    }
 
     async fn reload(&mut self) -> Result<(), Error> {
         let device =

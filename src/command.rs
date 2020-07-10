@@ -73,9 +73,7 @@ pub enum BacklightCommand {
 
 impl Command {
     #[inline]
-    pub fn new() -> Command {
-        Command::from_args()
-    }
+    pub fn new() -> Command { Command::from_args() }
 
     pub fn run(self) {
         let mut runtime = tokio::runtime::Runtime::new().unwrap();
@@ -144,7 +142,7 @@ impl BacklightCommand {
             Off => backlight.off().await,
             Max => backlight.max().await,
             BreathingLight { step, delay } => {
-                use futures_util::FutureExt;
+                use futures::FutureExt;
                 use tokio::signal::unix::{signal, SignalKind};
 
                 let mut term_signal = signal(SignalKind::terminate()).unwrap();

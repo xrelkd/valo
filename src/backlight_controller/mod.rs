@@ -1,7 +1,9 @@
 use std::{
-    path::Path,
+    path::{Path, PathBuf},
     sync::atomic::{AtomicU64, Ordering},
 };
+
+use snafu::{ResultExt, Snafu};
 
 mod keyboard;
 mod screen;
@@ -23,23 +25,34 @@ impl Default for Device {
 impl Device {
     pub async fn load(value_file_path: &Path, max_value_file_path: &Path) -> Result<Device, Error> {
         use tokio::fs;
-        let current_value =
-            AtomicU64::new(fs::read_to_string(value_file_path).await?.trim().parse::<u64>()?);
+        let current_value = AtomicU64::new(
+            fs::read_to_string(value_file_path)
+                .await
+                .context(ReadValueFile { file_path: value_file_path.to_owned() })?
+                .trim()
+                .parse::<u64>()
+                .context(ParseValue)?,
+        );
 
         let max_value = AtomicU64::new(
             fs::read_to_string(max_value_file_path)
                 .await
                 .unwrap_or(String::from("255"))
                 .trim()
-                .parse::<u64>()?,
+                .parse::<u64>()
+                .context(ParseValue)?,
         );
 
         Ok(Device { current_value, max_value })
     }
 
-    pub fn max_value(&self) -> u64 { self.max_value.load(Ordering::Relaxed) }
+    pub fn max_value(&self) -> u64 {
+        self.max_value.load(Ordering::Relaxed)
+    }
 
-    pub fn current_value(&self) -> u64 { self.current_value.load(Ordering::Relaxed) }
+    pub fn current_value(&self) -> u64 {
+        self.current_value.load(Ordering::Relaxed)
+    }
 }
 
 pub enum BacklightAction {
@@ -50,24 +63,22 @@ pub enum BacklightAction {
     Off,
 }
 
-#[derive(Debug, Fail)]
+#[derive(Debug, Snafu)]
 pub enum Error {
-    #[fail(display = "io error: {}", _0)]
-    StdIo(std::io::Error),
+    #[snafu(display("Could not read value file: {}, error: {}", file_path.display(), source))]
+    ReadValueFile { file_path: PathBuf, source: std::io::Error },
 
-    #[fail(display = "failed parse: {}", _0)]
-    ParseIntError(std::num::ParseIntError),
+    #[snafu(display("Could not write value file: {}, error: {}", file_path.display(), source))]
+    WriteValueFile { file_path: PathBuf, source: std::io::Error },
 
-    #[fail(display = "no such device: {}", _0)]
-    NoSuchDevice(String),
-}
+    #[snafu(display("Could not parse value, error: {}", source))]
+    ParseValue { source: std::num::ParseIntError },
 
-impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error { Error::StdIo(err) }
-}
+    #[snafu(display("Could not read directory, error {}", source))]
+    ReadDir { dir_path: PathBuf, source: std::io::Error },
 
-impl From<std::num::ParseIntError> for Error {
-    fn from(err: std::num::ParseIntError) -> Error { Error::ParseIntError(err) }
+    #[snafu(display("No such device: {}", device))]
+    NoSuchDevice { device: String },
 }
 
 #[async_trait]
@@ -76,7 +87,9 @@ pub trait Backlight: Send + Sync {
 
     fn current_value(&self) -> u64;
 
-    fn current_percentage(&self) -> u64 { 100 * self.current_value() / self.max_value() }
+    fn current_percentage(&self) -> u64 {
+        100 * self.current_value() / self.max_value()
+    }
 
     fn current_value_file_path(&self) -> &Path;
 
@@ -111,7 +124,9 @@ pub trait Backlight: Send + Sync {
             Off => 0,
         };
 
-        let _ = tokio::fs::write(self.current_value_file_path(), format!("{}", next)).await?;
+        tokio::fs::write(self.current_value_file_path(), format!("{}", next))
+            .await
+            .context(WriteValueFile { file_path: self.current_value_file_path().to_owned() })?;
         self.reload().await?;
         Ok(self.current_value())
     }
@@ -124,9 +139,13 @@ pub trait Backlight: Send + Sync {
         self.change_value(BacklightAction::Down { percentage_value }).await
     }
 
-    async fn max(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Max).await }
+    async fn max(&mut self) -> Result<u64, Error> {
+        self.change_value(BacklightAction::Max).await
+    }
 
-    async fn off(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Off).await }
+    async fn off(&mut self) -> Result<u64, Error> {
+        self.change_value(BacklightAction::Off).await
+    }
 
     async fn set(&mut self, value: u64) -> Result<u64, Error> {
         self.change_value(BacklightAction::Set { value }).await
