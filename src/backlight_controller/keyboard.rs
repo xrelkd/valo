@@ -14,9 +14,7 @@ pub struct KeyboardBacklight {
 }
 
 impl KeyboardBacklight {
-    pub async fn new() -> Result<KeyboardBacklight, Error> {
-        Self::load().await
-    }
+    pub async fn new() -> Result<KeyboardBacklight, Error> { Self::load().await }
 
     async fn load() -> Result<KeyboardBacklight, Error> {
         let device = Device::load(BL_VALUE_FILE.as_path(), BL_MAX_VALUE_FILE.as_path()).await?;
@@ -26,23 +24,13 @@ impl KeyboardBacklight {
 
 #[async_trait]
 impl Backlight for KeyboardBacklight {
-    fn max_value(&self) -> u64 {
-        self.device.max_value()
-    }
+    fn max_value(&self) -> u64 { self.device.max_value() }
 
-    fn current_value(&self) -> u64 {
-        self.device.current_value()
-    }
+    fn current_value(&self) -> u64 { self.device.current_value() }
 
-    fn current_value_file_path(&self) -> &Path {
-        BL_VALUE_FILE.as_path()
-    }
+    fn current_value_file_path(&self) -> &Path { BL_VALUE_FILE.as_path() }
 
-    fn maximum_value_file_path(&self) -> &Path {
-        BL_MAX_VALUE_FILE.as_path()
-    }
+    fn maximum_value_file_path(&self) -> &Path { BL_MAX_VALUE_FILE.as_path() }
 
-    async fn reload(&mut self) -> Result<(), Error> {
-        Self::load().await.map(|s| *self = s)
-    }
+    async fn reload(&mut self) -> Result<(), Error> { Self::load().await.map(|s| *self = s) }
 }

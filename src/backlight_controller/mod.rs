@@ -1,11 +1,12 @@
-use std::path::Path;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::{
+    path::Path,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 mod keyboard;
 mod screen;
 
-pub use self::keyboard::KeyboardBacklight;
-pub use self::screen::ScreenBacklight;
+pub use self::{keyboard::KeyboardBacklight, screen::ScreenBacklight};
 
 #[derive(Debug)]
 pub struct Device {
@@ -36,13 +37,9 @@ impl Device {
         Ok(Device { current_value, max_value })
     }
 
-    pub fn max_value(&self) -> u64 {
-        self.max_value.load(Ordering::Relaxed)
-    }
+    pub fn max_value(&self) -> u64 { self.max_value.load(Ordering::Relaxed) }
 
-    pub fn current_value(&self) -> u64 {
-        self.current_value.load(Ordering::Relaxed)
-    }
+    pub fn current_value(&self) -> u64 { self.current_value.load(Ordering::Relaxed) }
 }
 
 pub enum BacklightAction {
@@ -66,15 +63,11 @@ pub enum Error {
 }
 
 impl From<std::io::Error> for Error {
-    fn from(err: std::io::Error) -> Error {
-        Error::StdIo(err)
-    }
+    fn from(err: std::io::Error) -> Error { Error::StdIo(err) }
 }
 
 impl From<std::num::ParseIntError> for Error {
-    fn from(err: std::num::ParseIntError) -> Error {
-        Error::ParseIntError(err)
-    }
+    fn from(err: std::num::ParseIntError) -> Error { Error::ParseIntError(err) }
 }
 
 #[async_trait]
@@ -83,9 +76,7 @@ pub trait Backlight: Send + Sync {
 
     fn current_value(&self) -> u64;
 
-    fn current_percentage(&self) -> u64 {
-        100 * self.current_value() / self.max_value()
-    }
+    fn current_percentage(&self) -> u64 { 100 * self.current_value() / self.max_value() }
 
     fn current_value_file_path(&self) -> &Path;
 
@@ -133,13 +124,9 @@ pub trait Backlight: Send + Sync {
         self.change_value(BacklightAction::Down { percentage_value }).await
     }
 
-    async fn max(&mut self) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Max).await
-    }
+    async fn max(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Max).await }
 
-    async fn off(&mut self) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Off).await
-    }
+    async fn off(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Off).await }
 
     async fn set(&mut self, value: u64) -> Result<u64, Error> {
         self.change_value(BacklightAction::Set { value }).await

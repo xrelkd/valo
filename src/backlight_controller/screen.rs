@@ -15,9 +15,7 @@ pub struct ScreenBacklight {
 }
 
 impl ScreenBacklight {
-    pub async fn new() -> Result<Self, Error> {
-        Self::select_best_device().await
-    }
+    pub async fn new() -> Result<Self, Error> { Self::select_best_device().await }
 
     async fn select_best_device() -> Result<ScreenBacklight, Error> {
         use tokio::fs;
@@ -62,21 +60,13 @@ impl ScreenBacklight {
 
 #[async_trait]
 impl Backlight for ScreenBacklight {
-    fn max_value(&self) -> u64 {
-        self.device.max_value()
-    }
+    fn max_value(&self) -> u64 { self.device.max_value() }
 
-    fn current_value(&self) -> u64 {
-        self.device.current_value()
-    }
+    fn current_value(&self) -> u64 { self.device.current_value() }
 
-    fn current_value_file_path(&self) -> &Path {
-        self.value_file_path.as_path()
-    }
+    fn current_value_file_path(&self) -> &Path { self.value_file_path.as_path() }
 
-    fn maximum_value_file_path(&self) -> &Path {
-        self.maximum_value_file_path.as_path()
-    }
+    fn maximum_value_file_path(&self) -> &Path { self.maximum_value_file_path.as_path() }
 
     async fn reload(&mut self) -> Result<(), Error> {
         let device =

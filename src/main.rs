@@ -12,6 +12,4 @@ mod cmd;
 
 use structopt::StructOpt;
 
-fn main() {
-    cmd::Command::from_args().run();
-}
+fn main() { cmd::Command::from_args().run(); }

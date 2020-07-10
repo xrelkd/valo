@@ -1,0 +1,581 @@
+#compdef valo
+
+autoload -U is-at-least
+
+_valo() {
+    typeset -A opt_args
+    typeset -a _arguments_options
+    local ret=1
+
+    if is-at-least 5.2; then
+        _arguments_options=(-s -S -C)
+    else
+        _arguments_options=(-s -C)
+    fi
+
+    local context curcontext="$curcontext" state line
+    _arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+":: :_valo_commands" \
+"*::: :->valo" \
+&& ret=0
+    case $state in
+    (valo)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:valo-command-$line[1]:"
+        case $line[1] in
+            (screen)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+":: :_valo__screen_commands" \
+"*::: :->screen" \
+&& ret=0
+case $state in
+    (screen)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:valo-screen-command-$line[1]:"
+        case $line[1] in
+            (get)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(get-percentage)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':value:_files' \
+&& ret=0
+;;
+(set-percentage)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':percentage-value:_files' \
+&& ret=0
+;;
+(up)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+'::percentage-value:_files' \
+&& ret=0
+;;
+(down)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+'::percentage-value:_files' \
+&& ret=0
+;;
+(max)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(off)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(breathing-light)
+_arguments "${_arguments_options[@]}" \
+'--step=[]' \
+'--delay=[]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(keyboard)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+":: :_valo__keyboard_commands" \
+"*::: :->keyboard" \
+&& ret=0
+case $state in
+    (keyboard)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:valo-keyboard-command-$line[1]:"
+        case $line[1] in
+            (get)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(get-percentage)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(set)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':value:_files' \
+&& ret=0
+;;
+(set-percentage)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+':percentage-value:_files' \
+&& ret=0
+;;
+(up)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+'::percentage-value:_files' \
+&& ret=0
+;;
+(down)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+'::percentage-value:_files' \
+&& ret=0
+;;
+(max)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(off)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(breathing-light)
+_arguments "${_arguments_options[@]}" \
+'--step=[]' \
+'--delay=[]' \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(completions)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+":: :_valo__completions_commands" \
+"*::: :->completions" \
+&& ret=0
+case $state in
+    (completions)
+        words=($line[1] "${words[@]}")
+        (( CURRENT += 1 ))
+        curcontext="${curcontext%:*:*}:valo-completions-command-$line[1]:"
+        case $line[1] in
+            (bash)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(zsh)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(fish)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(powershell)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(elvish)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+;;
+(version)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+(help)
+_arguments "${_arguments_options[@]}" \
+'-h[Prints help information]' \
+'--help[Prints help information]' \
+'-V[Prints version information]' \
+'--version[Prints version information]' \
+&& ret=0
+;;
+        esac
+    ;;
+esac
+}
+
+(( $+functions[_valo_commands] )) ||
+_valo_commands() {
+    local commands; commands=(
+        "screen:A simple command that changes screen backlight level." \
+"keyboard:A simple command that changes MacBooks' keyboard backlight level." \
+"completions:Generate tab-completion scripts for your shell" \
+"version:Show version" \
+"help:Prints this message or the help of the given subcommand(s)" \
+    )
+    _describe -t commands 'valo commands' commands "$@"
+}
+(( $+functions[_valo__completions__bash_commands] )) ||
+_valo__completions__bash_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions bash commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__breathing-light_commands] )) ||
+_valo__keyboard__breathing-light_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard breathing-light commands' commands "$@"
+}
+(( $+functions[_valo__screen__breathing-light_commands] )) ||
+_valo__screen__breathing-light_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen breathing-light commands' commands "$@"
+}
+(( $+functions[_valo__completions_commands] )) ||
+_valo__completions_commands() {
+    local commands; commands=(
+        "bash:Generate shell completion for Bash" \
+"zsh:Generate shell completion for Zsh" \
+"fish:Generate shell completion for Fish" \
+"powershell:Generate shell completion for PowerShell" \
+"elvish:Generate shell completion for Elvish" \
+"help:Prints this message or the help of the given subcommand(s)" \
+    )
+    _describe -t commands 'valo completions commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__down_commands] )) ||
+_valo__keyboard__down_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard down commands' commands "$@"
+}
+(( $+functions[_valo__screen__down_commands] )) ||
+_valo__screen__down_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen down commands' commands "$@"
+}
+(( $+functions[_valo__completions__elvish_commands] )) ||
+_valo__completions__elvish_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions elvish commands' commands "$@"
+}
+(( $+functions[_valo__completions__fish_commands] )) ||
+_valo__completions__fish_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions fish commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__get_commands] )) ||
+_valo__keyboard__get_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard get commands' commands "$@"
+}
+(( $+functions[_valo__screen__get_commands] )) ||
+_valo__screen__get_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen get commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__get-percentage_commands] )) ||
+_valo__keyboard__get-percentage_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard get-percentage commands' commands "$@"
+}
+(( $+functions[_valo__screen__get-percentage_commands] )) ||
+_valo__screen__get-percentage_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen get-percentage commands' commands "$@"
+}
+(( $+functions[_valo__completions__help_commands] )) ||
+_valo__completions__help_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions help commands' commands "$@"
+}
+(( $+functions[_valo__help_commands] )) ||
+_valo__help_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo help commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__help_commands] )) ||
+_valo__keyboard__help_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard help commands' commands "$@"
+}
+(( $+functions[_valo__screen__help_commands] )) ||
+_valo__screen__help_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen help commands' commands "$@"
+}
+(( $+functions[_valo__keyboard_commands] )) ||
+_valo__keyboard_commands() {
+    local commands; commands=(
+        "get:Get current keyboard backlight brightness value" \
+"get-percentage:Get current keyboard backlight brightness percentage value" \
+"set:Set backlight brightness as value" \
+"set-percentage:Set backlight brightness as percentage value" \
+"up:Increase backlight brightness by percentage value" \
+"down:Decrease backlight brightness by percentage value" \
+"max:Set backlight brightness as max" \
+"off:Turn off backlight" \
+"breathing-light:Perform breathing light mode" \
+"help:Prints this message or the help of the given subcommand(s)" \
+    )
+    _describe -t commands 'valo keyboard commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__max_commands] )) ||
+_valo__keyboard__max_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard max commands' commands "$@"
+}
+(( $+functions[_valo__screen__max_commands] )) ||
+_valo__screen__max_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen max commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__off_commands] )) ||
+_valo__keyboard__off_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard off commands' commands "$@"
+}
+(( $+functions[_valo__screen__off_commands] )) ||
+_valo__screen__off_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen off commands' commands "$@"
+}
+(( $+functions[_valo__completions__powershell_commands] )) ||
+_valo__completions__powershell_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions powershell commands' commands "$@"
+}
+(( $+functions[_valo__screen_commands] )) ||
+_valo__screen_commands() {
+    local commands; commands=(
+        "get:Get current keyboard backlight brightness value" \
+"get-percentage:Get current keyboard backlight brightness percentage value" \
+"set:Set backlight brightness as value" \
+"set-percentage:Set backlight brightness as percentage value" \
+"up:Increase backlight brightness by percentage value" \
+"down:Decrease backlight brightness by percentage value" \
+"max:Set backlight brightness as max" \
+"off:Turn off backlight" \
+"breathing-light:Perform breathing light mode" \
+"help:Prints this message or the help of the given subcommand(s)" \
+    )
+    _describe -t commands 'valo screen commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__set_commands] )) ||
+_valo__keyboard__set_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard set commands' commands "$@"
+}
+(( $+functions[_valo__screen__set_commands] )) ||
+_valo__screen__set_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen set commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__set-percentage_commands] )) ||
+_valo__keyboard__set-percentage_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard set-percentage commands' commands "$@"
+}
+(( $+functions[_valo__screen__set-percentage_commands] )) ||
+_valo__screen__set-percentage_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen set-percentage commands' commands "$@"
+}
+(( $+functions[_valo__keyboard__up_commands] )) ||
+_valo__keyboard__up_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo keyboard up commands' commands "$@"
+}
+(( $+functions[_valo__screen__up_commands] )) ||
+_valo__screen__up_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo screen up commands' commands "$@"
+}
+(( $+functions[_valo__version_commands] )) ||
+_valo__version_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo version commands' commands "$@"
+}
+(( $+functions[_valo__completions__zsh_commands] )) ||
+_valo__completions__zsh_commands() {
+    local commands; commands=(
+        
+    )
+    _describe -t commands 'valo completions zsh commands' commands "$@"
+}
+
+_valo "$@"
