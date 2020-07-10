@@ -1,0 +1,41 @@
+[tasks.format]
+command = "rustup"
+args = ["run", "nightly", "cargo", "fmt"]
+
+[tasks.build]
+command = "cargo"
+args = ["build"]
+dependencies = ["format"]
+
+[tasks.build-all]
+command = "cargo"
+args = ["build"]
+dependencies = ["format"]
+
+[tasks.build-release]
+command = "cargo"
+args = ["build", "--release"]
+dependencies = ["format"]
+
+[tasks.test]
+command = "cargo"
+args = ["test"]
+
+[tasks.generate-completions]
+script = [
+'''
+rm -rf completions
+
+mkdir -p completions/{bash-completion/completions,fish/completions,zsh/site-functions}
+
+./target/release/valo completions bash > "completions/bash-completion/completions/valo"
+./target/release/valo completions fish > "completions/fish/completions/valo.fish"
+./target/release/valo completions zsh > "completions/zsh/site-functions/_valo"
+'''
+]
+dependencies = ["build-release"]
+
+[tasks.clean]
+command = "cargo"
+args = ["clean"]
+
