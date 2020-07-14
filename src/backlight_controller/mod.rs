@@ -37,7 +37,7 @@ impl Device {
         let max_value = AtomicU64::new(
             fs::read_to_string(max_value_file_path)
                 .await
-                .unwrap_or(String::from("255"))
+                .unwrap_or_else(|_| String::from("255"))
                 .trim()
                 .parse::<u64>()
                 .context(ParseValue)?,
@@ -46,13 +46,9 @@ impl Device {
         Ok(Device { current_value, max_value })
     }
 
-    pub fn max_value(&self) -> u64 {
-        self.max_value.load(Ordering::Relaxed)
-    }
+    pub fn max_value(&self) -> u64 { self.max_value.load(Ordering::Relaxed) }
 
-    pub fn current_value(&self) -> u64 {
-        self.current_value.load(Ordering::Relaxed)
-    }
+    pub fn current_value(&self) -> u64 { self.current_value.load(Ordering::Relaxed) }
 }
 
 pub enum BacklightAction {
@@ -87,9 +83,7 @@ pub trait Backlight: Send + Sync {
 
     fn current_value(&self) -> u64;
 
-    fn current_percentage(&self) -> u64 {
-        100 * self.current_value() / self.max_value()
-    }
+    fn current_percentage(&self) -> u64 { 100 * self.current_value() / self.max_value() }
 
     fn current_value_file_path(&self) -> &Path;
 
@@ -139,13 +133,9 @@ pub trait Backlight: Send + Sync {
         self.change_value(BacklightAction::Down { percentage_value }).await
     }
 
-    async fn max(&mut self) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Max).await
-    }
+    async fn max(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Max).await }
 
-    async fn off(&mut self) -> Result<u64, Error> {
-        self.change_value(BacklightAction::Off).await
-    }
+    async fn off(&mut self) -> Result<u64, Error> { self.change_value(BacklightAction::Off).await }
 
     async fn set(&mut self, value: u64) -> Result<u64, Error> {
         self.change_value(BacklightAction::Set { value }).await

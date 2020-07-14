@@ -15,9 +15,7 @@ pub struct ScreenBacklight {
 }
 
 impl ScreenBacklight {
-    pub async fn new() -> Result<Self, Error> {
-        Self::select_best_device().await
-    }
+    pub async fn new() -> Result<Self, Error> { Self::select_best_device().await }
 
     async fn select_best_device() -> Result<ScreenBacklight, Error> {
         use tokio::fs;
@@ -35,7 +33,7 @@ impl ScreenBacklight {
             let current_value =
                 tokio::fs::read_to_string(current_dir.path().join("max_brightness").as_path())
                     .await
-                    .unwrap_or("0".to_owned())
+                    .unwrap_or_else(|_| "0".to_owned())
                     .trim()
                     .parse::<u64>()
                     .unwrap_or(0);
@@ -68,21 +66,13 @@ impl ScreenBacklight {
 
 #[async_trait]
 impl Backlight for ScreenBacklight {
-    fn max_value(&self) -> u64 {
-        self.device.max_value()
-    }
+    fn max_value(&self) -> u64 { self.device.max_value() }
 
-    fn current_value(&self) -> u64 {
-        self.device.current_value()
-    }
+    fn current_value(&self) -> u64 { self.device.current_value() }
 
-    fn current_value_file_path(&self) -> &Path {
-        self.value_file_path.as_path()
-    }
+    fn current_value_file_path(&self) -> &Path { self.value_file_path.as_path() }
 
-    fn maximum_value_file_path(&self) -> &Path {
-        self.maximum_value_file_path.as_path()
-    }
+    fn maximum_value_file_path(&self) -> &Path { self.maximum_value_file_path.as_path() }
 
     async fn reload(&mut self) -> Result<(), Error> {
         let device =

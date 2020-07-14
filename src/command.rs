@@ -96,7 +96,7 @@ impl Command {
     async fn generate_completion(shell: ClapShell) -> i32 {
         let mut app = Self::clap();
         let binary_name = app.get_name().to_owned();
-        app.gen_completions_to(&binary_name, shell.into(), &mut std::io::stdout());
+        app.gen_completions_to(&binary_name, shell, &mut std::io::stdout());
         EXIT_SUCCESS
     }
 }
@@ -122,6 +122,7 @@ impl BacklightCommand {
         }
     }
 
+    #[allow(clippy::never_loop)]
     async fn run<B: Backlight>(self, mut backlight: B) -> i32 {
         use BacklightCommand::*;
         let current_brightness_value = match self {
