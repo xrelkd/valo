@@ -1,5 +1,7 @@
 # Valo: A Program to Control Backlights (and other Hardware Lights) in GNU/Linux
 
+![Build](https://github.com/xrelkd/valo/workflows/Build/badge.svg)
+
 - [Introduction](#introduction)
 - [Usage](#usage)
 
