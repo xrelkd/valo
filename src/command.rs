@@ -34,13 +34,13 @@ pub enum Commands {
     #[clap(about = "Output shell completion code for the specified shell (bash, zsh, fish)")]
     Completions { shell: clap_complete::Shell },
 
-    #[clap(name = "screen", about = "Changes screen backlight level.")]
+    #[clap(name = "screen", about = "Change screen backlight level.")]
     ScreenBacklight {
         #[clap(subcommand, name = "screen")]
         command: BacklightCommands,
     },
 
-    #[clap(name = "keyboard", about = "Changes MacBooks' keyboard backlight level.")]
+    #[clap(name = "keyboard", about = "Change MacBooks' keyboard backlight level.")]
     KeyboardBacklight {
         #[clap(subcommand, name = "keyboard")]
         command: BacklightCommands,
@@ -49,37 +49,37 @@ pub enum Commands {
 
 #[derive(Debug, Subcommand)]
 pub enum BacklightCommands {
-    #[clap(about = "Gets current keyboard backlight brightness value")]
+    #[clap(about = "Get current keyboard backlight brightness value")]
     Get,
 
-    #[clap(about = "Gets current keyboard backlight brightness percentage value")]
+    #[clap(about = "Get current keyboard backlight brightness percentage value")]
     GetPercentage,
 
-    #[clap(about = "Sets backlight brightness as value")]
+    #[clap(about = "Set backlight brightness as value")]
     Set { value: u64 },
 
-    #[clap(about = "Sets backlight brightness as percentage value")]
+    #[clap(about = "Set backlight brightness as percentage value")]
     SetPercentage { percentage_value: u64 },
 
-    #[clap(about = "Increases backlight brightness by percentage value")]
+    #[clap(about = "Increase backlight brightness by percentage value")]
     Up {
         #[clap(default_value = "5")]
         percentage_value: u64,
     },
 
-    #[clap(about = "Decreases backlight brightness by percentage value")]
+    #[clap(about = "Decrease backlight brightness by percentage value")]
     Down {
         #[clap(default_value = "5")]
         percentage_value: u64,
     },
 
-    #[clap(about = "Sets backlight brightness as max")]
+    #[clap(about = "Set backlight brightness as max")]
     Max,
 
-    #[clap(about = "Turns off backlight")]
+    #[clap(about = "Turn off backlight")]
     Off,
 
-    #[clap(about = "Performs breathing light mode")]
+    #[clap(about = "Perform breathing light mode")]
     BreathingLight {
         #[arg(long, help = "percentage per step")]
         step: u64,
