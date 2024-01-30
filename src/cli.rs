@@ -96,12 +96,8 @@ impl Default for Cli {
 impl Cli {
     pub fn run(self) -> Result<(), Error> {
         match self.commands {
-            Commands::ScreenBacklight { command } => tokio::runtime::Runtime::new()
-                .context(error::InitializeTokioRuntimeSnafu)?
-                .block_on(async move { command.screen().await }),
-            Commands::KeyboardBacklight { command } => tokio::runtime::Runtime::new()
-                .context(error::InitializeTokioRuntimeSnafu)?
-                .block_on(async move { command.keyboard().await }),
+            Commands::ScreenBacklight { command } => command.screen(),
+            Commands::KeyboardBacklight { command } => command.keyboard(),
             Commands::Completions { shell } => {
                 let mut app = Self::command();
                 let bin_name = app.get_name().to_string();
@@ -119,14 +115,22 @@ impl Cli {
 }
 
 impl BacklightCommands {
-    pub async fn keyboard(self) -> Result<(), Error> {
-        let backlight = KeyboardBacklight::new().await?;
-        self.run(backlight).await
+    pub fn keyboard(self) -> Result<(), Error> {
+        tokio::runtime::Runtime::new().context(error::InitializeTokioRuntimeSnafu)?.block_on(
+            async move {
+                let backlight = KeyboardBacklight::new().await?;
+                self.run(backlight).await
+            },
+        )
     }
 
-    pub async fn screen(self) -> Result<(), Error> {
-        let backlight = ScreenBacklight::new().await?;
-        self.run(backlight).await
+    pub fn screen(self) -> Result<(), Error> {
+        tokio::runtime::Runtime::new().context(error::InitializeTokioRuntimeSnafu)?.block_on(
+            async move {
+                let backlight = ScreenBacklight::new().await?;
+                self.run(backlight).await
+            },
+        )
     }
 
     #[allow(clippy::future_not_send, clippy::never_loop)]

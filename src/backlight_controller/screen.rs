@@ -21,8 +21,7 @@ impl ScreenBacklight {
     pub async fn new() -> Result<Self, Error> { Self::select_best_device().await }
 
     async fn select_best_device() -> Result<Self, Error> {
-        use tokio::fs;
-        let mut backlight_dir = fs::read_dir(BL_PATH.as_path())
+        let mut backlight_dir = tokio::fs::read_dir(BL_PATH.as_path())
             .await
             .with_context(|_| error::ReadDirectorySnafu { dir_path: BL_PATH.to_path_buf() })?;
         let mut best_value: u64 = 0;

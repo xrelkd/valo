@@ -1,5 +1,5 @@
 mod backlight_controller;
-mod command;
+mod cli;
 mod error;
 mod shadow {
     #![allow(clippy::needless_raw_string_hashes)]
@@ -9,7 +9,7 @@ mod shadow {
     pub use self::build::*;
 }
 
-use self::command::Cli;
+use self::cli::Cli;
 
 fn main() {
     if let Err(err) = Cli::default().run() {
