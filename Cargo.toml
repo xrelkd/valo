@@ -1,0 +1,25 @@
+[package]
+name        = "valo"
+version     = "0.2.2"
+authors     = ["xrelkd <46590321+xrelkd@users.noreply.github.com>"]
+homepage    = "https://github.com/xrelkd/valo"
+repository  = "https://github.com/xrelkd/valo"
+readme      = "README.md"
+license     = "GPL-3.0"
+edition     = "2021"
+description = "A Program to Control Backlights (and other Hardware Lights) in GNU/Linux"
+categories  = ["backlight"]
+keywords    = ["backlight"]
+
+[dependencies]
+futures = "0.3"
+tokio = { version = "1", features = [
+  "fs",
+  "rt-multi-thread",
+  "signal",
+  "time",
+] }
+
+lazy_static = "1"
+snafu       = "0.6"
+structopt   = "0.3"
