@@ -1,107 +1,124 @@
+use std::io::Write;
+
+use clap::{CommandFactory, Parser, Subcommand};
 use futures::FutureExt;
-use structopt::{clap::Shell as ClapShell, StructOpt};
 use tokio::signal::unix::{signal, SignalKind};
 
-use crate::backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight};
+use crate::{
+    backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight},
+    shadow,
+};
 
 const EXIT_SUCCESS: i32 = 0;
 const EXIT_FAILURE: i32 = 1;
 
-#[derive(Debug, StructOpt)]
-pub enum Command {
-    #[structopt(name = "screen", about = "Changes screen backlight level.")]
-    ScreenBacklight {
-        #[structopt(subcommand, name = "screen")]
-        cmd: BacklightCommand,
-    },
-
-    #[structopt(name = "keyboard", about = "Changes MacBooks' keyboard backlight level.")]
-    KeyboardBacklight {
-        #[structopt(subcommand, name = "keyboard")]
-        cmd: BacklightCommand,
-    },
-
-    #[structopt(name = "completions", about = "Generates tab-completion scripts for your shell")]
-    Completions {
-        #[structopt(name = "shell")]
-        shell: ClapShell,
-    },
-
-    #[structopt(name = "version", about = "Shows version")]
-    Version,
+#[derive(Parser)]
+#[command(
+    name = "valo",
+    author,
+    version,
+    long_version = shadow::CLAP_LONG_VERSION,
+    about,
+    long_about = None
+)]
+pub struct Cli {
+    #[command(subcommand)]
+    commands: Commands,
 }
 
-#[derive(Debug, StructOpt)]
-pub enum BacklightCommand {
-    #[structopt(about = "Gets current keyboard backlight brightness value")]
+#[derive(Debug, Parser)]
+pub enum Commands {
+    #[clap(about = "Print version information")]
+    Version,
+
+    #[clap(about = "Output shell completion code for the specified shell (bash, zsh, fish)")]
+    Completions { shell: clap_complete::Shell },
+
+    #[clap(name = "screen", about = "Changes screen backlight level.")]
+    ScreenBacklight {
+        #[clap(subcommand, name = "screen")]
+        command: BacklightCommands,
+    },
+
+    #[clap(name = "keyboard", about = "Changes MacBooks' keyboard backlight level.")]
+    KeyboardBacklight {
+        #[clap(subcommand, name = "keyboard")]
+        command: BacklightCommands,
+    },
+}
+
+#[derive(Debug, Subcommand)]
+pub enum BacklightCommands {
+    #[clap(about = "Gets current keyboard backlight brightness value")]
     Get,
 
-    #[structopt(about = "Gets current keyboard backlight brightness percentage value")]
+    #[clap(about = "Gets current keyboard backlight brightness percentage value")]
     GetPercentage,
 
-    #[structopt(about = "Sets backlight brightness as value")]
+    #[clap(about = "Sets backlight brightness as value")]
     Set { value: u64 },
 
-    #[structopt(about = "Sets backlight brightness as percentage value")]
+    #[clap(about = "Sets backlight brightness as percentage value")]
     SetPercentage { percentage_value: u64 },
 
-    #[structopt(about = "Increases backlight brightness by percentage value")]
+    #[clap(about = "Increases backlight brightness by percentage value")]
     Up {
-        #[structopt(default_value = "5")]
+        #[clap(default_value = "5")]
         percentage_value: u64,
     },
 
-    #[structopt(about = "Decreases backlight brightness by percentage value")]
+    #[clap(about = "Decreases backlight brightness by percentage value")]
     Down {
-        #[structopt(default_value = "5")]
+        #[clap(default_value = "5")]
         percentage_value: u64,
     },
 
-    #[structopt(about = "Sets backlight brightness as max")]
+    #[clap(about = "Sets backlight brightness as max")]
     Max,
 
-    #[structopt(about = "Turns off backlight")]
+    #[clap(about = "Turns off backlight")]
     Off,
 
-    #[structopt(about = "Performs breathing light mode")]
+    #[clap(about = "Performs breathing light mode")]
     BreathingLight {
-        #[structopt(long, about = "percentage per step")]
+        #[arg(long, help = "percentage per step")]
         step: u64,
 
-        #[structopt(long, about = "delay millisecond")]
+        #[arg(long, help = "delay millisecond")]
         delay: u64,
     },
 }
 
-impl Command {
-    #[inline]
-    pub fn new() -> Self { Self::from_args() }
+impl Default for Cli {
+    fn default() -> Self { Self::parse() }
+}
 
-    pub fn run(self) {
-        let runtime = tokio::runtime::Runtime::new().unwrap();
-
-        let exit_code = runtime.block_on(async move {
-            match self {
-                Self::ScreenBacklight { cmd } => cmd.screen().await,
-                Self::KeyboardBacklight { cmd } => cmd.keyboard().await,
-                Self::Completions { shell } => {
-                    let mut app = Self::clap();
-                    let binary_name = app.get_name().to_owned();
-                    app.gen_completions_to(&binary_name, shell, &mut std::io::stdout());
-                    EXIT_SUCCESS
-                }
-                Self::Version => Self::clap()
-                    .write_version(&mut std::io::stdout())
-                    .map(|_ret| EXIT_SUCCESS)
-                    .unwrap_or(EXIT_FAILURE),
+impl Cli {
+    pub fn run(self) -> i32 {
+        match self.commands {
+            Commands::ScreenBacklight { command } => tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async move { command.screen().await }),
+            Commands::KeyboardBacklight { command } => tokio::runtime::Runtime::new()
+                .unwrap()
+                .block_on(async move { command.keyboard().await }),
+            Commands::Completions { shell } => {
+                let mut app = Self::command();
+                let bin_name = app.get_name().to_string();
+                clap_complete::generate(shell, &mut app, bin_name, &mut std::io::stdout());
+                EXIT_SUCCESS
             }
-        });
-
-        std::process::exit(exit_code);
+            Commands::Version => {
+                std::io::stdout()
+                    .write_all(Self::command().render_long_version().as_bytes())
+                    .expect("Failed to write to stdout");
+                EXIT_SUCCESS
+            }
+        }
     }
 }
 
-impl BacklightCommand {
+impl BacklightCommands {
     pub async fn keyboard(self) -> i32 {
         match KeyboardBacklight::new().await {
             Ok(backlight) => self.run(backlight).await,
