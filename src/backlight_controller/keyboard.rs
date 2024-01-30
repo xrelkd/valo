@@ -16,11 +16,11 @@ pub struct KeyboardBacklight {
 }
 
 impl KeyboardBacklight {
-    pub async fn new() -> Result<KeyboardBacklight, Error> { Self::load().await }
+    pub async fn new() -> Result<Self, Error> { Self::load().await }
 
-    async fn load() -> Result<KeyboardBacklight, Error> {
+    async fn load() -> Result<Self, Error> {
         let device = Device::load(BL_VALUE_FILE.as_path(), BL_MAX_VALUE_FILE.as_path()).await?;
-        Ok(KeyboardBacklight { device })
+        Ok(Self { device })
     }
 }
 

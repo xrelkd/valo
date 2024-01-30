@@ -1,4 +1,6 @@
+use futures::FutureExt;
 use structopt::{clap::Shell as ClapShell, StructOpt};
+use tokio::signal::unix::{signal, SignalKind};
 
 use crate::backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight};
 
@@ -73,17 +75,22 @@ pub enum BacklightCommand {
 
 impl Command {
     #[inline]
-    pub fn new() -> Command { Command::from_args() }
+    pub fn new() -> Self { Self::from_args() }
 
     pub fn run(self) {
         let runtime = tokio::runtime::Runtime::new().unwrap();
 
         let exit_code = runtime.block_on(async move {
             match self {
-                Command::ScreenBacklight { cmd } => cmd.screen().await,
-                Command::KeyboardBacklight { cmd } => cmd.keyboard().await,
-                Command::Completions { shell } => Self::generate_completion(shell).await,
-                Command::Version => Self::clap()
+                Self::ScreenBacklight { cmd } => cmd.screen().await,
+                Self::KeyboardBacklight { cmd } => cmd.keyboard().await,
+                Self::Completions { shell } => {
+                    let mut app = Self::clap();
+                    let binary_name = app.get_name().to_owned();
+                    app.gen_completions_to(&binary_name, shell, &mut std::io::stdout());
+                    EXIT_SUCCESS
+                }
+                Self::Version => Self::clap()
                     .write_version(&mut std::io::stdout())
                     .map(|_ret| EXIT_SUCCESS)
                     .unwrap_or(EXIT_FAILURE),
@@ -92,13 +99,6 @@ impl Command {
 
         std::process::exit(exit_code);
     }
-
-    async fn generate_completion(shell: ClapShell) -> i32 {
-        let mut app = Self::clap();
-        let binary_name = app.get_name().to_owned();
-        app.gen_completions_to(&binary_name, shell, &mut std::io::stdout());
-        EXIT_SUCCESS
-    }
 }
 
 impl BacklightCommand {
@@ -106,7 +106,7 @@ impl BacklightCommand {
         match KeyboardBacklight::new().await {
             Ok(backlight) => self.run(backlight).await,
             Err(err) => {
-                eprintln!("{}", err);
+                eprintln!("{err}");
                 EXIT_FAILURE
             }
         }
@@ -116,36 +116,37 @@ impl BacklightCommand {
         match ScreenBacklight::new().await {
             Ok(backlight) => self.run(backlight).await,
             Err(err) => {
-                eprintln!("{}", err);
+                eprintln!("{err}");
                 EXIT_FAILURE
             }
         }
     }
 
-    #[allow(clippy::never_loop)]
-    async fn run<B: Backlight>(self, mut backlight: B) -> i32 {
-        use BacklightCommand::*;
+    #[allow(clippy::future_not_send, clippy::never_loop)]
+    async fn run<B>(self, mut backlight: B) -> i32
+    where
+        B: Backlight,
+    {
         let current_brightness_value = match self {
-            Get => {
+            Self::Get => {
                 let v = backlight.current_value();
-                println!("{}", v);
+                println!("{v}");
                 Ok(v)
             }
-            GetPercentage => {
+            Self::GetPercentage => {
                 let v = backlight.current_percentage();
-                println!("{}", v);
+                println!("{v}");
                 Ok(v)
             }
-            Set { value } => backlight.set(value).await,
-            SetPercentage { percentage_value } => backlight.set_percentage(percentage_value).await,
-            Up { percentage_value } => backlight.up(percentage_value).await,
-            Down { percentage_value } => backlight.down(percentage_value).await,
-            Off => backlight.off().await,
-            Max => backlight.max().await,
-            BreathingLight { step, delay } => {
-                use futures::FutureExt;
-                use tokio::signal::unix::{signal, SignalKind};
-
+            Self::Set { value } => backlight.set(value).await,
+            Self::SetPercentage { percentage_value } => {
+                backlight.set_percentage(percentage_value).await
+            }
+            Self::Up { percentage_value } => backlight.up(percentage_value).await,
+            Self::Down { percentage_value } => backlight.down(percentage_value).await,
+            Self::Off => backlight.off().await,
+            Self::Max => backlight.max().await,
+            Self::BreathingLight { step, delay } => {
                 let mut term_signal = signal(SignalKind::terminate()).unwrap();
                 let mut int_signal = signal(SignalKind::interrupt()).unwrap();
 
@@ -160,10 +161,10 @@ impl BacklightCommand {
 
                 loop {
                     futures::select! {
-                        _ = backlight.run_breathing(step, delay, 0, 100).fuse() => {
+                        () = backlight.run_breathing(step, delay, 0, 100).fuse() => {
                             break;
                         },
-                        _ = signal_receiver.fuse() => {
+                        () = signal_receiver.fuse() => {
                             break;
                         },
                     }

@@ -19,7 +19,7 @@ pub struct ScreenBacklight {
 impl ScreenBacklight {
     pub async fn new() -> Result<Self, Error> { Self::select_best_device().await }
 
-    async fn select_best_device() -> Result<ScreenBacklight, Error> {
+    async fn select_best_device() -> Result<Self, Error> {
         use tokio::fs;
         let mut backlight_dir = fs::read_dir(BL_PATH.as_path())
             .await
@@ -54,7 +54,7 @@ impl ScreenBacklight {
                 let device =
                     Device::load(value_file_path.as_path(), maximum_value_file_path.as_path())
                         .await?;
-                Ok(ScreenBacklight {
+                Ok(Self {
                     device,
                     value_file_path,
                     maximum_value_file_path,

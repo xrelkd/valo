@@ -18,13 +18,13 @@ pub struct Device {
 }
 
 impl Default for Device {
-    fn default() -> Device {
-        Device { current_value: AtomicU64::new(0), max_value: AtomicU64::new(255) }
+    fn default() -> Self {
+        Self { current_value: AtomicU64::new(0), max_value: AtomicU64::new(255) }
     }
 }
 
 impl Device {
-    pub async fn load(value_file_path: &Path, max_value_file_path: &Path) -> Result<Device, Error> {
+    pub async fn load(value_file_path: &Path, max_value_file_path: &Path) -> Result<Self, Error> {
         let current_value = AtomicU64::new(
             tokio::fs::read_to_string(value_file_path)
                 .await
@@ -43,7 +43,7 @@ impl Device {
                 .context(ParseValue)?,
         );
 
-        Ok(Device { current_value, max_value })
+        Ok(Self { current_value, max_value })
     }
 
     pub fn max_value(&self) -> u64 { self.max_value.load(Ordering::Relaxed) }
@@ -94,9 +94,8 @@ pub trait Backlight: Send + Sync {
         let current_value = self.current_value();
         let max_value = self.max_value();
 
-        use BacklightAction::*;
         let next = match action {
-            Up { percentage_value } => {
+            BacklightAction::Up { percentage_value } => {
                 let value = self.compute_value(percentage_value);
                 if current_value >= max_value - value {
                     max_value
@@ -104,7 +103,7 @@ pub trait Backlight: Send + Sync {
                     current_value + value
                 }
             }
-            Down { percentage_value } => {
+            BacklightAction::Down { percentage_value } => {
                 let value = self.compute_value(percentage_value);
                 if current_value <= value {
                     0
@@ -112,9 +111,9 @@ pub trait Backlight: Send + Sync {
                     current_value - value
                 }
             }
-            Set { value } => std::cmp::min(value, max_value),
-            Max => max_value,
-            Off => 0,
+            BacklightAction::Set { value } => std::cmp::min(value, max_value),
+            BacklightAction::Max => max_value,
+            BacklightAction::Off => 0,
         };
 
         tokio::fs::write(self.current_value_file_path(), next.to_string())
@@ -163,23 +162,24 @@ pub trait Backlight: Send + Sync {
 
         loop {
             for _ in 1..iteration {
-                let _ = self.up(step).await;
+                let _unused = self.up(step).await;
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
-            let _ = self.set_percentage(max_percentage).await;
+            let _unused = self.set_percentage(max_percentage).await;
             tokio::time::sleep(Duration::from_millis(delay)).await;
 
             for _ in 1..iteration {
-                let _ = self.down(step).await;
+                let _unused = self.down(step).await;
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
-            let _ = self.set_percentage(min_percentage).await;
+            let _unused = self.set_percentage(min_percentage).await;
             tokio::time::sleep(Duration::from_millis(delay)).await;
         }
     }
 
+    #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, clippy::cast_sign_loss)]
     fn compute_value(&self, percentage_value: u64) -> u64 {
         (percentage_value as f64 * 0.01 * self.max_value() as f64) as u64
     }
