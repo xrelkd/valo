@@ -17,7 +17,7 @@
   outputs = { self, nixpkgs, flake-utils, fenix, crane }:
     let
       name = "valo";
-      version = "0.2.2";
+      version = "0.3.0";
     in
     (flake-utils.lib.eachDefaultSystem
       (system:
