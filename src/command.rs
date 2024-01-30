@@ -2,15 +2,15 @@ use std::io::Write;
 
 use clap::{CommandFactory, Parser, Subcommand};
 use futures::FutureExt;
+use snafu::ResultExt;
 use tokio::signal::unix::{signal, SignalKind};
 
 use crate::{
     backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight},
+    error,
+    error::Error,
     shadow,
 };
-
-const EXIT_SUCCESS: i32 = 0;
-const EXIT_FAILURE: i32 = 1;
 
 #[derive(Parser)]
 #[command(
@@ -94,78 +94,78 @@ impl Default for Cli {
 }
 
 impl Cli {
-    pub fn run(self) -> i32 {
+    pub fn run(self) -> Result<(), Error> {
         match self.commands {
             Commands::ScreenBacklight { command } => tokio::runtime::Runtime::new()
-                .unwrap()
+                .context(error::InitializeTokioRuntimeSnafu)?
                 .block_on(async move { command.screen().await }),
             Commands::KeyboardBacklight { command } => tokio::runtime::Runtime::new()
-                .unwrap()
+                .context(error::InitializeTokioRuntimeSnafu)?
                 .block_on(async move { command.keyboard().await }),
             Commands::Completions { shell } => {
                 let mut app = Self::command();
                 let bin_name = app.get_name().to_string();
                 clap_complete::generate(shell, &mut app, bin_name, &mut std::io::stdout());
-                EXIT_SUCCESS
+                Ok(())
             }
             Commands::Version => {
                 std::io::stdout()
                     .write_all(Self::command().render_long_version().as_bytes())
                     .expect("Failed to write to stdout");
-                EXIT_SUCCESS
+                Ok(())
             }
         }
     }
 }
 
 impl BacklightCommands {
-    pub async fn keyboard(self) -> i32 {
-        match KeyboardBacklight::new().await {
-            Ok(backlight) => self.run(backlight).await,
-            Err(err) => {
-                eprintln!("{err}");
-                EXIT_FAILURE
-            }
-        }
+    pub async fn keyboard(self) -> Result<(), Error> {
+        let backlight = KeyboardBacklight::new().await?;
+        self.run(backlight).await
     }
 
-    pub async fn screen(self) -> i32 {
-        match ScreenBacklight::new().await {
-            Ok(backlight) => self.run(backlight).await,
-            Err(err) => {
-                eprintln!("{err}");
-                EXIT_FAILURE
-            }
-        }
+    pub async fn screen(self) -> Result<(), Error> {
+        let backlight = ScreenBacklight::new().await?;
+        self.run(backlight).await
     }
 
     #[allow(clippy::future_not_send, clippy::never_loop)]
-    async fn run<B>(self, mut backlight: B) -> i32
+    async fn run<B>(self, mut backlight: B) -> Result<(), Error>
     where
         B: Backlight,
     {
-        let current_brightness_value = match self {
+        match self {
             Self::Get => {
                 let v = backlight.current_value();
                 println!("{v}");
-                Ok(v)
             }
             Self::GetPercentage => {
                 let v = backlight.current_percentage();
                 println!("{v}");
-                Ok(v)
             }
-            Self::Set { value } => backlight.set(value).await,
+            Self::Set { value } => {
+                let _ = backlight.set(value).await?;
+            }
             Self::SetPercentage { percentage_value } => {
-                backlight.set_percentage(percentage_value).await
+                let _ = backlight.set_percentage(percentage_value).await?;
             }
-            Self::Up { percentage_value } => backlight.up(percentage_value).await,
-            Self::Down { percentage_value } => backlight.down(percentage_value).await,
-            Self::Off => backlight.off().await,
-            Self::Max => backlight.max().await,
+            Self::Up { percentage_value } => {
+                let _ = backlight.up(percentage_value).await?;
+            }
+            Self::Down { percentage_value } => {
+                let _ = backlight.down(percentage_value).await?;
+            }
+            Self::Off => {
+                let _ = backlight.off().await?;
+            }
+            Self::Max => {
+                let _ = backlight.max().await?;
+            }
             Self::BreathingLight { step, delay } => {
-                let mut term_signal = signal(SignalKind::terminate()).unwrap();
-                let mut int_signal = signal(SignalKind::interrupt()).unwrap();
+                let mut term_signal = signal(SignalKind::terminate())
+                    .context(error::CreateUnixSignalListenerSnafu)?;
+                let mut int_signal = signal(SignalKind::interrupt())
+                    .context(error::CreateUnixSignalListenerSnafu)?;
 
                 let signal_receiver = async {
                     futures::select! {
@@ -187,10 +187,10 @@ impl BacklightCommands {
                     }
                 }
 
-                backlight.set(origin_value).await
+                let _ = backlight.set(origin_value).await?;
             }
-        };
+        }
 
-        current_brightness_value.map(|_value| EXIT_SUCCESS).unwrap_or(EXIT_FAILURE)
+        Ok(())
     }
 }

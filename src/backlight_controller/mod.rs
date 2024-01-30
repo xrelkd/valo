@@ -1,15 +1,25 @@
+mod error;
 mod keyboard;
 mod screen;
 
 use std::{
-    path::{Path, PathBuf},
+    path::Path,
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
 
-use snafu::{ResultExt, Snafu};
+use snafu::ResultExt;
 
-pub use self::{keyboard::KeyboardBacklight, screen::ScreenBacklight};
+pub use self::{error::Error, keyboard::KeyboardBacklight, screen::ScreenBacklight};
+
+#[derive(Clone, Debug)]
+pub enum BacklightAction {
+    Up { percentage_value: u64 },
+    Down { percentage_value: u64 },
+    Set { value: u64 },
+    Max,
+    Off,
+}
 
 #[derive(Debug)]
 pub struct Device {
@@ -28,10 +38,10 @@ impl Device {
         let current_value = AtomicU64::new(
             tokio::fs::read_to_string(value_file_path)
                 .await
-                .context(ReadValueFile { file_path: value_file_path.to_owned() })?
+                .context(error::ReadValueFileSnafu { file_path: value_file_path.to_owned() })?
                 .trim()
                 .parse::<u64>()
-                .context(ParseValue)?,
+                .context(error::ParseValueSnafu)?,
         );
 
         let max_value = AtomicU64::new(
@@ -40,7 +50,7 @@ impl Device {
                 .unwrap_or_else(|_| String::from("255"))
                 .trim()
                 .parse::<u64>()
-                .context(ParseValue)?,
+                .context(error::ParseValueSnafu)?,
         );
 
         Ok(Self { current_value, max_value })
@@ -49,32 +59,6 @@ impl Device {
     pub fn max_value(&self) -> u64 { self.max_value.load(Ordering::Relaxed) }
 
     pub fn current_value(&self) -> u64 { self.current_value.load(Ordering::Relaxed) }
-}
-
-pub enum BacklightAction {
-    Up { percentage_value: u64 },
-    Down { percentage_value: u64 },
-    Set { value: u64 },
-    Max,
-    Off,
-}
-
-#[derive(Debug, Snafu)]
-pub enum Error {
-    #[snafu(display("Could not read value file: {}, error: {}", file_path.display(), source))]
-    ReadValueFile { file_path: PathBuf, source: std::io::Error },
-
-    #[snafu(display("Could not write value file: {}, error: {}", file_path.display(), source))]
-    WriteValueFile { file_path: PathBuf, source: std::io::Error },
-
-    #[snafu(display("Could not parse value, error: {}", source))]
-    ParseValue { source: std::num::ParseIntError },
-
-    #[snafu(display("Could not read directory, error {}", source))]
-    ReadDir { dir_path: PathBuf, source: std::io::Error },
-
-    #[snafu(display("No such device: {}", device))]
-    NoSuchDevice { device: String },
 }
 
 pub trait Backlight: Send + Sync {
@@ -111,14 +95,14 @@ pub trait Backlight: Send + Sync {
                     current_value - value
                 }
             }
-            BacklightAction::Set { value } => std::cmp::min(value, max_value),
+            BacklightAction::Set { value } => value.min(max_value),
             BacklightAction::Max => max_value,
             BacklightAction::Off => 0,
         };
 
-        tokio::fs::write(self.current_value_file_path(), next.to_string())
-            .await
-            .context(WriteValueFile { file_path: self.current_value_file_path().to_owned() })?;
+        tokio::fs::write(self.current_value_file_path(), next.to_string()).await.context(
+            error::WriteValueFileSnafu { file_path: self.current_value_file_path().to_owned() },
+        )?;
         self.reload().await?;
         Ok(self.current_value())
     }

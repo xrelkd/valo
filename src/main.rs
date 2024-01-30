@@ -1,5 +1,6 @@
 mod backlight_controller;
 mod command;
+mod error;
 mod shadow {
     #![allow(clippy::needless_raw_string_hashes)]
     use shadow_rs::shadow;
@@ -11,6 +12,8 @@ mod shadow {
 use self::command::Cli;
 
 fn main() {
-    let exit_code = Cli::default().run();
-    std::process::exit(exit_code);
+    if let Err(err) = Cli::default().run() {
+        eprintln!("Error: {err}");
+        std::process::exit(1);
+    }
 }

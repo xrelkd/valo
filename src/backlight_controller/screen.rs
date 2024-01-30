@@ -1,8 +1,9 @@
 use std::path::{Path, PathBuf};
 
 use lazy_static::lazy_static;
+use snafu::ResultExt;
 
-use crate::backlight_controller::{Backlight, Device, Error};
+use crate::backlight_controller::{error, Backlight, Device, Error};
 
 lazy_static! {
     static ref BL_PATH: PathBuf = PathBuf::from("/sys/class/backlight");
@@ -23,14 +24,14 @@ impl ScreenBacklight {
         use tokio::fs;
         let mut backlight_dir = fs::read_dir(BL_PATH.as_path())
             .await
-            .map_err(|source| Error::ReadDir { dir_path: BL_PATH.to_path_buf(), source })?;
+            .with_context(|_| error::ReadDirectorySnafu { dir_path: BL_PATH.to_path_buf() })?;
         let mut best_value: u64 = 0;
         let mut best_controller = None;
 
         while let Some(current_dir) = backlight_dir
             .next_entry()
             .await
-            .map_err(|source| Error::ReadDir { dir_path: BL_PATH.to_path_buf(), source })?
+            .with_context(|_| error::ReadDirectorySnafu { dir_path: BL_PATH.to_path_buf() })?
         {
             let current_value =
                 tokio::fs::read_to_string(current_dir.path().join("max_brightness").as_path())
@@ -58,7 +59,7 @@ impl ScreenBacklight {
                     device,
                     value_file_path,
                     maximum_value_file_path,
-                    _best_controller: best_controller.to_str().unwrap().to_owned(),
+                    _best_controller: best_controller.to_str().unwrap_or_default().to_owned(),
                 })
             }
             None => Err(Error::NoSuchDevice { device: "screen light".to_owned() }),
