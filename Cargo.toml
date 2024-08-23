@@ -1,6 +1,6 @@
 [package]
 name        = "valo"
-version     = "0.3.2"
+version     = "0.3.3"
 authors     = ["xrelkd <46590321+xrelkd@users.noreply.github.com>"]
 homepage    = "https://github.com/xrelkd/valo"
 repository  = "https://github.com/xrelkd/valo"
