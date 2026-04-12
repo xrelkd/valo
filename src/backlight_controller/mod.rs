@@ -138,7 +138,9 @@ pub trait Backlight: Send + Sync {
 
         loop {
             for _ in 1..iteration {
-                let _unused = self.up(step).await;
+                if let Err(err) = self.up(step).await {
+                    eprintln!("{err}");
+                }
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
@@ -146,16 +148,26 @@ pub trait Backlight: Send + Sync {
             tokio::time::sleep(Duration::from_millis(delay)).await;
 
             for _ in 1..iteration {
-                let _unused = self.down(step).await;
+                if let Err(err) = self.down(step).await {
+                    eprintln!("{err}");
+                }
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
-            let _unused = self.set_percentage(min_percentage).await;
+            if let Err(err) = self.set_percentage(min_percentage).await {
+                eprintln!("{err}");
+            }
             tokio::time::sleep(Duration::from_millis(delay)).await;
         }
     }
 
-    #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, clippy::cast_sign_loss)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_precision_loss,
+        clippy::cast_sign_loss,
+        reason = "percentage * max_value is guaranteed to fit in u64; max_value is typically \
+                  255-1000"
+    )]
     fn compute_value(&self, percentage_value: u64) -> u64 {
         (percentage_value as f64 * 0.01 * self.max_value() as f64) as u64
     }
