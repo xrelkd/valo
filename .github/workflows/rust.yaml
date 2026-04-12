@@ -34,10 +34,10 @@ jobs:
     name: Check Rust format
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v14
+        uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Show rustfmt version
         run: |
@@ -53,17 +53,17 @@ jobs:
     needs:
       - rustfmt
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v14
+        uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Pre Cache
         run: |
           rm -rf ~/.cargo/registry/index/ ~/.cargo/registry/cache/ ~/.cargo/git/db/
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry/index/
@@ -93,17 +93,17 @@ jobs:
         mode:
           - release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v14
+        uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Pre Cache
         run: |
           rm -rf ~/.cargo/registry/index/ ~/.cargo/registry/cache/ ~/.cargo/git/db/
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry/index/
@@ -126,19 +126,19 @@ jobs:
       - clippy
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: "true"
 
       - name: Install Nix
-        uses: DeterminateSystems/nix-installer-action@v14
+        uses: DeterminateSystems/nix-installer-action@v22
 
       - name: Pre Cache
         run: |
           rm -rf ~/.cargo/registry/index/ ~/.cargo/registry/cache/ ~/.cargo/git/db/
 
       - name: Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cargo/registry/index/
