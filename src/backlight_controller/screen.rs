@@ -1,13 +1,13 @@
-use std::path::{Path, PathBuf};
+use std::{
+    path::{Path, PathBuf},
+    sync::LazyLock,
+};
 
-use lazy_static::lazy_static;
 use snafu::ResultExt;
 
 use crate::backlight_controller::{Backlight, Device, Error, error};
 
-lazy_static! {
-    static ref BL_PATH: PathBuf = PathBuf::from("/sys/class/backlight");
-}
+static BL_PATH: LazyLock<PathBuf> = LazyLock::new(|| PathBuf::from("/sys/class/backlight"));
 
 #[derive(Debug, Default)]
 pub struct ScreenBacklight {

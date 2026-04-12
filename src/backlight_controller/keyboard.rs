@@ -1,14 +1,14 @@
-use std::path::{Path, PathBuf};
-
-use lazy_static::lazy_static;
+use std::{
+    path::{Path, PathBuf},
+    sync::LazyLock,
+};
 
 use crate::backlight_controller::{Backlight, Device, Error};
 
-lazy_static! {
-    static ref BL_PATH: PathBuf = PathBuf::from("/sys/class/leds/smc::kbd_backlight");
-    static ref BL_VALUE_FILE: PathBuf = BL_PATH.join("brightness");
-    static ref BL_MAX_VALUE_FILE: PathBuf = BL_PATH.join("max_brightness");
-}
+static BL_PATH: LazyLock<PathBuf> =
+    LazyLock::new(|| PathBuf::from("/sys/class/leds/smc::kbd_backlight"));
+static BL_VALUE_FILE: LazyLock<PathBuf> = LazyLock::new(|| BL_PATH.join("brightness"));
+static BL_MAX_VALUE_FILE: LazyLock<PathBuf> = LazyLock::new(|| BL_PATH.join("max_brightness"));
 
 #[derive(Debug, Default)]
 pub struct KeyboardBacklight {
