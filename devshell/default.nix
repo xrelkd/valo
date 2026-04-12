@@ -1,8 +1,9 @@
-{ rustToolchain
-, cargoArgs
-, unitTestArgs
-, pkgs
-, ...
+{
+  rustToolchain,
+  cargoArgs,
+  unitTestArgs,
+  pkgs,
+  ...
 }:
 
 let
@@ -23,8 +24,8 @@ pkgs.mkShell {
     jq
 
     hclfmt
-    nixpkgs-fmt
-    nodePackages.prettier
+    nixfmt
+    prettier
     shfmt
     taplo
     treefmt
@@ -37,5 +38,8 @@ pkgs.mkShell {
 
   shellHook = ''
     export NIX_PATH="nixpkgs=${pkgs.path}"
+
+    # This allows the compiled build-script-build to find libgit2 at runtime
+    export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath [ pkgs.libgit2 ]}:$LD_LIBRARY_PATH"
   '';
 }

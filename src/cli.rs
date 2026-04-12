@@ -3,7 +3,7 @@ use std::io::Write;
 use clap::{CommandFactory, Parser, Subcommand};
 use futures::FutureExt;
 use snafu::ResultExt;
-use tokio::signal::unix::{signal, SignalKind};
+use tokio::signal::unix::{SignalKind, signal};
 
 use crate::{
     backlight_controller::{Backlight, KeyboardBacklight, ScreenBacklight},

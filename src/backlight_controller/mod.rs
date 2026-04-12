@@ -81,19 +81,11 @@ pub trait Backlight: Send + Sync {
         let next = match action {
             BacklightAction::Up { percentage_value } => {
                 let value = self.compute_value(percentage_value);
-                if current_value >= max_value - value {
-                    max_value
-                } else {
-                    current_value + value
-                }
+                if current_value >= max_value - value { max_value } else { current_value + value }
             }
             BacklightAction::Down { percentage_value } => {
                 let value = self.compute_value(percentage_value);
-                if current_value <= value {
-                    0
-                } else {
-                    current_value - value
-                }
+                current_value.saturating_sub(value)
             }
             BacklightAction::Set { value } => value.min(max_value),
             BacklightAction::Max => max_value,
@@ -146,7 +138,9 @@ pub trait Backlight: Send + Sync {
 
         loop {
             for _ in 1..iteration {
-                let _unused = self.up(step).await;
+                if let Err(err) = self.up(step).await {
+                    eprintln!("{err}");
+                }
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
@@ -154,16 +148,26 @@ pub trait Backlight: Send + Sync {
             tokio::time::sleep(Duration::from_millis(delay)).await;
 
             for _ in 1..iteration {
-                let _unused = self.down(step).await;
+                if let Err(err) = self.down(step).await {
+                    eprintln!("{err}");
+                }
                 tokio::time::sleep(Duration::from_millis(delay)).await;
             }
 
-            let _unused = self.set_percentage(min_percentage).await;
+            if let Err(err) = self.set_percentage(min_percentage).await {
+                eprintln!("{err}");
+            }
             tokio::time::sleep(Duration::from_millis(delay)).await;
         }
     }
 
-    #[allow(clippy::cast_possible_truncation, clippy::cast_precision_loss, clippy::cast_sign_loss)]
+    #[expect(
+        clippy::cast_possible_truncation,
+        clippy::cast_precision_loss,
+        clippy::cast_sign_loss,
+        reason = "percentage * max_value is guaranteed to fit in u64; max_value is typically \
+                  255-1000"
+    )]
     fn compute_value(&self, percentage_value: u64) -> u64 {
         (percentage_value as f64 * 0.01 * self.max_value() as f64) as u64
     }
