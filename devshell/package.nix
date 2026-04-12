@@ -1,9 +1,10 @@
-{ name
-, version
-, lib
-, rustPlatform
-, protobuf
-, installShellFiles
+{
+  name,
+  version,
+  lib,
+  rustPlatform,
+  protobuf,
+  installShellFiles,
 }:
 
 rustPlatform.buildRustPackage {
