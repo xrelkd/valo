@@ -61,6 +61,6 @@ in
     cargo --version
     rustc --version
     cargo nextest --version
-    cargo nextest run --workspace --no-fail-fast --no-capture "$@"
+    cargo nextest run --workspace --no-fail-fast --no-capture --no-tests pass "$@"
   '';
 }
