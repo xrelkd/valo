@@ -81,19 +81,11 @@ pub trait Backlight: Send + Sync {
         let next = match action {
             BacklightAction::Up { percentage_value } => {
                 let value = self.compute_value(percentage_value);
-                if current_value >= max_value - value {
-                    max_value
-                } else {
-                    current_value + value
-                }
+                if current_value >= max_value - value { max_value } else { current_value + value }
             }
             BacklightAction::Down { percentage_value } => {
                 let value = self.compute_value(percentage_value);
-                if current_value <= value {
-                    0
-                } else {
-                    current_value - value
-                }
+                current_value.saturating_sub(value)
             }
             BacklightAction::Set { value } => value.min(max_value),
             BacklightAction::Max => max_value,

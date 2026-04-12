@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use lazy_static::lazy_static;
 use snafu::ResultExt;
 
-use crate::backlight_controller::{error, Backlight, Device, Error};
+use crate::backlight_controller::{Backlight, Device, Error, error};
 
 lazy_static! {
     static ref BL_PATH: PathBuf = PathBuf::from("/sys/class/backlight");
