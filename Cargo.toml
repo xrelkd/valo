@@ -1,14 +1,14 @@
 [package]
 name         = "valo"
 description  = "A Program to Control Backlights (and other Hardware Lights) in GNU/Linux"
-version      = "0.3.5"
+version      = "0.3.6"
 authors      = ["xrelkd <46590321+xrelkd@users.noreply.github.com>"]
 homepage     = "https://github.com/xrelkd/valo"
 repository   = "https://github.com/xrelkd/valo"
 readme       = "README.md"
 license      = "GPL-3.0"
 edition      = "2024"
-rust-version = "1.93"
+rust-version = "1.98"
 categories   = ["backlight"]
 keywords     = ["backlight"]
 
@@ -27,7 +27,7 @@ shadow-rs     = "2.0"
 snafu         = "0.9"
 
 [build-dependencies]
-shadow-rs = "2.0"
+shadow-rs = { version = "2.0", default-features = false, features = ["build"] }
 
 [lints]
 workspace = true
