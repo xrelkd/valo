@@ -1,6 +1,6 @@
 { pkgs }:
 
-pkgs.runCommandNoCC "check-format"
+pkgs.runCommand "check-format"
   {
     buildInputs = with pkgs; [
       fd
